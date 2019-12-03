@@ -65,25 +65,12 @@ def find_collisions(wire1, wire2):
             w2p1 = wire2[j]
             w2p2 = wire2[j+1]
 
-            coord = None
-            if is_between(w1p1.x, w1p2.x, w2p1.x):
-                if is_between(w2p1.y, w2p2.y, w1p1.y):
-                    coord = Coord(w2p1.x, w1p1.y)
-
-            if is_between(w2p1.x, w2p2.x, w1p1.x):
-                if is_between(w1p1.y, w1p2.y, w2p1.y):
-                    coord = Coord(w1p1.x, w2p1.y)
+            coord = get_collision(w1p1,w1p2,w2p1,w2p2)
 
             if coord is not None:
                 insertionOffset += 1
 
                 collisions.append(coord)
-                
-                next_coord_index = wire1.index(w1p2)
-                wire1_with_collisions.insert(insertionOffset+i, coord)
-
-                next_coord_index = wire2.index(w2p2)
-                wire2_with_collisions.insert(insertionOffset+j, coord)
 
 
     return (collisions, wire1_with_collisions, wire2_with_collisions)    
@@ -99,11 +86,7 @@ def is_between(x1, x2, val):
 def find_quickest_path_length(wire1, wire2, collisions):
     fewest_steps = 999999999
     
-    path1 = []
-    path2 = []
-
     for c in collisions:
-        print(c)
         path1_steps = get_path_to_collision(wire1, c)
         path2_steps = get_path_to_collision(wire2, c)
 
@@ -115,21 +98,24 @@ def find_quickest_path_length(wire1, wire2, collisions):
 
 def get_path_to_collision(wire, c):
     path = []
-    for coord in wire:
+    for i, coord in enumerate(wire[:-1]):
         path.append(coord)
-        if coord == c:
+        
+        if get_collision(coord,wire[i+1],c,c) is not None:
+            path.append(c)
             break
 
-    # path = remove_loops(path)
+    path = remove_loops(path)
     path_len = 0
     for i, coord in enumerate(path[:-1]):
         path_len += coord.get_relative_length(path[i+1]) 
 
     return path_len
 
+
 def remove_loops(path):
     i=0
-
+    new_path = []
     while i<len(path):
         coord = path[i]
         if coord in path[i+1:]:
@@ -140,6 +126,16 @@ def remove_loops(path):
 
     return new_path
 
+def get_collision(w1p1, w1p2, w2p1, w2p2):
+    if is_between(w1p1.x, w1p2.x, w2p1.x):
+        if is_between(w2p1.y, w2p2.y, w1p1.y):
+            return Coord(w2p1.x, w1p1.y)
+
+    if is_between(w2p1.x, w2p2.x, w1p1.x):
+        if is_between(w1p1.y, w1p2.y, w2p1.y):
+            return Coord(w1p1.x, w2p1.y)
+
+    return None
 
 def read_puzzle_input():
     """ Reads the puzzle input and returns it a list.
