@@ -41,8 +41,6 @@ class Intcode():
             op_code, param_modes = self.parse_op_code(instruction)
             params = self.parse_parameters_for_op_code(op_code, param_modes)
 
-            print(op_code.number, params)
-
             if op_code == op_codes['01']:
                 self.op_code_1(params[0], params[1], params[2])
             elif op_code == op_codes['02']:
@@ -83,11 +81,11 @@ class Intcode():
     def parse_parameters_for_op_code(self, op_code, param_modes):
         parameters = []
 
-        for i, mode in enumerate(param_modes[::-1]):
+        for mode in param_modes[::-1]:
             addr = self.get_next_address_value()
-            val = self.get_memory(addr)
 
             if mode == '0':
+                val = self.get_memory(addr)
                 parameters.append(val)
             elif mode == '1':
                 parameters.append(addr)
@@ -125,7 +123,6 @@ class Intcode():
         """ returns the value at the address"""
         val = self.get_memory(address)
         self.opcode4_outputs.append(val)
-        print(val)
 
 
 def read_puzzle_input():
@@ -142,12 +139,8 @@ def read_puzzle_input():
 if __name__ == "__main__":
     program = read_puzzle_input()
 
-    # program[1] = 12
-    # program[2] = 2
-
     comp = Intcode()
     comp.load_program(program)
     result = comp.execute()
 
-    print(comp.opcode4_outputs)
-    print(result)
+    print(comp.opcode4_outputs[-1])
