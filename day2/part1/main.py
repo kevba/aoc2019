@@ -42,10 +42,6 @@ def opcode_two(program, reader_index):
 
     return (program, reader_index)
 
-operations = {
-    1: opcode_one,
-    2: opcode_two,
-}
 
 def get_input_values(program, reader_index):
     input_postition_1 = program[reader_index+1]
