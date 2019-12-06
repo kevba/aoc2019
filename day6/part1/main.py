@@ -1,7 +1,9 @@
-
+import timeit
 import math
 
 PUZZLE_INPUT_PATH = "../input.txt"    
+
+distance_to_root = {}
 
 def parse(orbits):
     node_to_root = {}
@@ -14,11 +16,15 @@ def parse(orbits):
 
 def count_orbits(orbits, orbit):
     try:
-        return count_orbits(orbits, orbits[orbit]) + 1    
+        root_distance = distance_to_root.get(orbit, -1)
+        if  root_distance > -1:
+            return root_distance
+    
+        root_distance =  count_orbits(orbits, orbits[orbit]) + 1
+        distance_to_root[orbit] = root_distance
+        return root_distance
     except KeyError:
         return 0
-
-    return count_orbits(orbits, next_orbit) + 1    
     
 
 def read_puzzle_input():
@@ -33,8 +39,9 @@ def read_puzzle_input():
     
     return inputs
 
-if __name__ == "__main__":
+def solve():
     orbits = read_puzzle_input()
+
     tree = parse(orbits)
     
     answer = 0
@@ -42,3 +49,7 @@ if __name__ == "__main__":
         answer += count_orbits(tree, orbit)
 
     print(answer)
+
+if __name__ == "__main__":
+    execution_time = timeit.timeit(solve, number=1)
+    print("{} s".format(execution_time))

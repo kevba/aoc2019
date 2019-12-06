@@ -1,7 +1,10 @@
-
+import timeit
 import math
 
 PUZZLE_INPUT_PATH = "../input.txt"    
+
+distance_to_root = {}
+
 
 def parse(orbits):
     node_to_root = {}
@@ -46,7 +49,7 @@ def read_puzzle_input():
     
     return inputs
 
-if __name__ == "__main__":
+def solve():
     orbitLines = read_puzzle_input()
     orbits = parse(orbitLines)
 
@@ -58,3 +61,7 @@ if __name__ == "__main__":
     # Remove the jumps from YPOU and SANTA
     required_jumps = total_distance - 2
     print(required_jumps)
+
+if __name__ == "__main__":
+    execution_time = timeit.timeit(solve, number=1)
+    print("{} s".format(execution_time))
