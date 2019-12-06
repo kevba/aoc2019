@@ -82,6 +82,10 @@ def test_execute():
             'program': [3,0,99],
             'output': 1,
         },
+        {
+            'program': [1101,225,6,6,99,0,0,0],
+            'output': 1101,
+        },
     ]
 
     for i, t in enumerate(tests):

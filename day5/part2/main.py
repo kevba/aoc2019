@@ -14,17 +14,21 @@ op_codes = {
     '01': OpCode(1,  '100'),
     '02': OpCode(2,  '100'),
     '03': OpCode(3,  '1'),
-    '04': OpCode(4,  '1'),
+    '04': OpCode(4,  '0'),
+    '05': OpCode(5,  '00'),
+    '06': OpCode(6,  '00'),
+    '07': OpCode(7,  '100'),
+    '08': OpCode(8,  '100'),
     '99': OpCode(99, ''),
 }
 
 class Intcode():
     def __init__(self):
-        self.instruction_pointer = -1
+        self.instruction_pointer = 0
         self.program = []
         self.running = False
 
-        self.opcode3_inputs = [1]
+        self.opcode3_inputs = []
         self.opcode4_outputs = []
 
     def load_program(self, program):
@@ -33,11 +37,11 @@ class Intcode():
 
     def execute(self):
         self.memory = self.program.copy()
-        self.instruction_pointer = -1
+        self.instruction_pointer = 0
         self.running = True
 
         while self.running:
-            instruction = self.get_next_address_value()
+            instruction = self.get_address_value()
             op_code, param_modes = self.parse_op_code(instruction)
             params = self.parse_parameters_for_op_code(op_code, param_modes)
 
@@ -49,12 +53,33 @@ class Intcode():
                 self.op_code_3(params[0])
             elif op_code == op_codes['04']:
                 self.op_code_4(params[0])
+            elif op_code == op_codes['05']:
+                self.op_code_5(params[0], params[1])
+                continue
+            elif op_code == op_codes['06']:
+                self.op_code_6(params[0], params[1])
+                continue
+            elif op_code == op_codes['07']:
+                self.op_code_7(params[0], params[1], params[2])
+            elif op_code == op_codes['08']:
+                self.op_code_8(params[0], params[1], params[2])
             elif op_code == op_codes['99']:
                 self.op_code_99()
+                continue
             else:
                 print("unknown operation: {}".format(op_code.number))
 
+            _ = self.get_next_address_value()
+
         return self.get_memory(0)
+
+    def get_output(self):
+        if len(self.opcode4_outputs) > 0:
+            return self.opcode4_outputs[-1]
+        return None
+
+    def set_inputs(self, inputs):
+        self.opcode3_inputs = inputs
 
     def parse_op_code(self, instruction):
         instruction = str(instruction)
@@ -104,8 +129,11 @@ class Intcode():
         self.instruction_pointer += 1
         return self.get_memory(self.instruction_pointer)
 
-    def op_code_99(self):
-        self.running = False
+    def get_address_value(self):
+        return self.get_memory(self.instruction_pointer)
+    
+    def set_instruction_pointer(self, address):
+        self.instruction_pointer = address
 
     def op_code_1(self, value1, value2, address):
         """ Adds the values together and stores the result in address"""
@@ -121,8 +149,38 @@ class Intcode():
         
     def op_code_4(self, address):
         """ returns the value at the address"""
-        val = self.get_memory(address)
-        self.opcode4_outputs.append(val)
+        self.opcode4_outputs.append(address)
+
+    def op_code_5(self, value1, value2):
+        """ Moves the instruction pointer to value2 if value one is non-zero"""
+        if (value1 != 0):
+            self.set_instruction_pointer(value2)
+        else:
+            self.get_next_address_value()
+
+    def op_code_6(self, value1, value2):
+        """ Moves the instruction pointer to value2 if value one is zero"""
+        if (value1 == 0):
+            self.set_instruction_pointer(value2)
+        else:
+            self.get_next_address_value()
+
+    def op_code_7(self, value1, value2, address):
+        """ Sets address to 1 if value1 is smaller then value2. the address gets set to 0 otherwise"""
+        value = 0
+        if (value1 < value2):
+            value = 1
+        self.set_memory(address, value)
+
+    def op_code_8(self, value1, value2, address):
+        """ Sets address to 1 if value1 is equal to value2. the address gets set to 0 otherwise"""
+        value = 0
+        if (value1 == value2):
+            value = 1
+        self.set_memory(address, value)
+
+    def op_code_99(self):
+        self.running = False
 
 
 def read_puzzle_input():
@@ -140,7 +198,8 @@ if __name__ == "__main__":
     program = read_puzzle_input()
 
     comp = Intcode()
+    comp.set_inputs([5])
     comp.load_program(program)
-    result = comp.execute()
 
-    print(comp.opcode4_outputs[-1])
+    result = comp.execute()
+    print(comp.get_output())
