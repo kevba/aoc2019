@@ -8,24 +8,38 @@ PUZZLE_INPUT_PATH = "../input.txt"
 PHASE_SETTINGS = [5,6,7,8,9]
 
 class OpCode():
-    def __init__(self, number, param_count):
+    def __init__(self, number, parameters):
         self.number = number
-        self.param_count = param_count
+        self.parameters = parameters
                 
     def __eq__(self, other):
         return self.number == other.number
 
+    def get_parameter_options(self, modes):
+        params = self.parameters.copy()
+        for i, p in enumerate(params[::-1]):
+            try:
+                p.mode = int(modes[i])
+            except IndexError:
+                p.mode = 0
+        return params
+
+class Parameter():
+    def __init__(self, is_output=False, mode=0):
+        self.is_output = is_output
+        self.mode = mode
+
 op_codes = {
-    '01': OpCode(1,  3),
-    '02': OpCode(2,  3),
-    '03': OpCode(3,  1),
-    '04': OpCode(4,  1),
-    '05': OpCode(5,  2),
-    '06': OpCode(6,  2),
-    '07': OpCode(7,  3),
-    '08': OpCode(8,  3),
-    '09': OpCode(9,  1),
-    '99': OpCode(99, 0),
+    '01': OpCode(1,  [Parameter(), Parameter(), Parameter(True)]),
+    '02': OpCode(2,  [Parameter(), Parameter(), Parameter(True)]),
+    '03': OpCode(3,  [Parameter(True)]),
+    '04': OpCode(4,  [Parameter()]),
+    '05': OpCode(5,  [Parameter(), Parameter()]),
+    '06': OpCode(6,  [Parameter(), Parameter()]),
+    '07': OpCode(7,  [Parameter(), Parameter(), Parameter(True)]),
+    '08': OpCode(8,  [Parameter(), Parameter(), Parameter(True)]),
+    '09': OpCode(9,  [Parameter()]),
+    '99': OpCode(99, []),
 }
 
 class Intcode():
@@ -54,9 +68,10 @@ class Intcode():
         self.running = True
 
         while self.running:
-            instruction = self.get_address_value()
-            op_code, param_modes = self.parse_op_code(instruction)
-            addresses = self.parse_addresses(param_modes)
+            print(self.memory)
+            instruction = self.get_current_address()
+            op_code, parameters = self.parse_op_code(instruction)
+            addresses = self.parse_addresses(parameters)
 
             if op_code == op_codes['01']:
                 self.op_code_1(addresses[0], addresses[1], addresses[2])
@@ -94,7 +109,7 @@ class Intcode():
             else:
                 print("unknown operation: {}".format(op_code.number))
 
-            _ = self.get_next_address_value()
+            _ = self.get_next_address()
         return self.get_memory(0)
 
     def parse_op_code(self, instruction):
@@ -110,30 +125,34 @@ class Intcode():
             op_code = op_codes[op_code_key]
             param_modes = instruction[0:-2]
 
-        # Fill in all parameters that did not have a mode defined.
-        missing_param_count = op_code.param_count - len(param_modes)
+        return (op_code, op_code.get_parameter_options(param_modes))
     
-        for _ in range(missing_param_count):
-            param_modes = "0"+param_modes
-
-        return (op_code, param_modes)
-    
-    def parse_addresses(self, param_modes):
+    def parse_addresses(self, parameters):
         addresses = []
 
-        for mode in param_modes[::-1]:
-            addr = self.get_next_address_value()
+        for param in parameters:
+            addr = self.get_next_address()
+            # print(addresses, addr, param.is_output, param.mode)
 
-            if mode == '0':
-                address = self.get_memory(addr)
-                addresses.append(address)
-            elif mode == '1':
+            if param.is_output:
+                if param.mode == 0:
+                    addresses.append(addr)
+                elif param.mode == 1:
+                    addresses.append(addr)
+                elif param.mode == 2:
+                    addresses.append(addr + self.relative_base)   
+                else:
+                    print("unknown mode: {}".format(param.mode))
+                continue
+
+            if param.mode == 0:
+                addresses.append(self.get_memory(addr))
+            elif param.mode == 1:
                 addresses.append(addr)
-            elif mode == '2':
-                address = self.get_memory(addr + self.relative_base)
-                addresses.append(address)
+            elif param.mode == 2:
+                addresses.append(self.get_memory(addr + self.relative_base))
             else:
-                print("unknown mode: {}".format(mode))
+                print("unknown mode: {}".format(param.mode))
 
         return addresses
 
@@ -157,11 +176,11 @@ class Intcode():
         new_mem = [0]*(address - (len(self.memory)-1))
         self.memory.extend(new_mem)
 
-    def get_next_address_value(self):
+    def get_next_address(self):
         self.instruction_pointer += 1
         return self.get_memory(self.instruction_pointer)
 
-    def get_address_value(self):
+    def get_current_address(self):
         return self.get_memory(self.instruction_pointer)
     
     def set_instruction_pointer(self, address):
@@ -171,7 +190,9 @@ class Intcode():
         """ Adds the values together and stores the result in address"""
         val1 = self.get_memory(value1)
         val2 = self.get_memory(value2)
-    
+
+        print(val1, val2, address)
+
         self.set_memory(address, val1 + val2)
 
     def op_code_2(self, value1, value2, address):
@@ -198,7 +219,7 @@ class Intcode():
         if (val1 != 0):
             self.set_instruction_pointer(val2)
         else:
-            self.get_next_address_value()
+            self.get_next_address()
 
     def op_code_6(self, value1, value2):
         """ Moves the instruction pointer to value2 if value one is zero"""
@@ -208,7 +229,7 @@ class Intcode():
         if (val1 == 0):
             self.set_instruction_pointer(val2)
         else:
-            self.get_next_address_value()
+            self.get_next_address()
 
     def op_code_7(self, value1, value2, address):
         """ Sets address to 1 if value1 is smaller then value2. the address gets set to 0 otherwise"""
