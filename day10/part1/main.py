@@ -7,7 +7,7 @@ class Asteroid():
     def __init__(self, x, y):
         self.x = x
         self.y = y
-
+        
         self.blocked_paths = []
         self.visible_counter = 0
     
@@ -29,21 +29,24 @@ class Asteroid():
         self.blocked_paths.append(f)
 
     def create_path_fomula(self, x2, y2):
-        if (x2 - self.x) == 0:
-            return lambda x, y:  x == self.x        
-
-        if (y2 - self.y) == 0:
-            return lambda x, y:  y == self.y         
+        if (x2 - self.x) == 0 and self.y > y2:
+            return lambda x, y:  x == self.x and y > self.y
+        elif (y2 - self.y) == 0 and self.x > x2:
+            return lambda x, y:  y == self.y and x > self.x
+        if (x2 - self.x) == 0 and self.y < y2:
+            return lambda x, y:  x == self.x and y < self.y
+        elif (y2 - self.y) == 0 and self.x < x2:
+            return lambda x, y:  y == self.y and x < self.x
 
         lin = lambda x: ((y2 - self.y) / (x2 - self.x))*x
 
         if self.x > x2 and self.y > y2:
             is_blocked = lambda x, y: lin(x) == y and x > self.x and y > self.y  
-        if self.x < x2 and self.y > y2:
+        elif self.x < x2 and self.y > y2:
             is_blocked = lambda x, y: lin(x) == y and x < self.x and y > self.y  
-        if self.x > x2 and self.y < y2:
+        elif self.x > x2 and self.y < y2:
             is_blocked = lambda x, y: lin(x) == y and x > self.x and y < self.y  
-        if self.x < x2 and self.y < y2:
+        elif self.x < x2 and self.y < y2:
             is_blocked = lambda x, y: lin(x) == y and x < self.x and y < self.y  
 
         # return lambda x, y: lin(x) < y+1 and lin(x) > y-1         
