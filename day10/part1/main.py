@@ -1,72 +1,56 @@
 import timeit
 import math 
+from fractions import Fraction
 
 PUZZLE_INPUT_PATH = "../input.txt"
 ASTEROIDS = []
+MAX_WIDTH = 0
+MAX_LENTH = 0
 
 class Asteroid():
     def __init__(self, x, y):
         self.x = x
         self.y = y
 
-        self.visible_asteroids = []
-    
+        self.atans_1 = []
+        self.atans_2 = []
+        self.atans_3 = []
+        self.atans_4 = []
+
     def set_visible_asteroids(self):
         sorted_by_distance = ASTEROIDS.copy()
         sorted_by_distance.sort()
-
+        
         for a in sorted_by_distance:
             if a is self:
                 continue
-            
-            if not self.is_blocked(a):
-                self.visible_asteroids.append(a)
-    
-    def is_blocked(self, a):
-        for va in self.visible_asteroids:
-            lin = self.create_path_fomula(va.x, va.y)
 
-            if (self.x > va.x > a.x) and (self.y < va.y < a.y):
-                pass
-            elif (self.x < va.x < a.x) and (self.y < va.y < a.y):
-                pass
-            elif (self.x < va.x < a.x) and (self.y > va.y > a.y):
-                pass
-            elif (self.x > va.x > a.x) and (self.y > va.y > a.y):
-                pass
-            else:
-                continue
-            
-            try:
-                if lin(a.x) == a.y:
-                    return True
-            except ZeroDivisionError:
-                if self.x == va.x == a.x:
-                    return True
-        return False
+            atan = math.atan2(a.x-self.x, a.y-self.y)
 
-    def create_path_fomula(self, x2, y2):
-        lin = lambda x: ((y2 - self.y) / (x2 - self.x))*x
+            if a.x >= self.x and a.x >= self.x:
+                if atan not in self.atans_1:
+                    self.atans_1.append(atan)
+            elif a.x > self.x and a.x < self.x:
+                if atan not in self.atans_2:
+                    self.atans_2.append(atan)
+            elif a.x < self.x and a.x > self.x:
+                if atan not in self.atans_3:
+                    self.atans_3.append(atan)
+            elif a.x < self.x and a.x < self.x:
+                if atan not in self.atans_4:
+                    self.atans_4.append(atan)
 
-        # if (x2 - self.x) == 0 and  y2 > self.y:
-        #     return lambda x, y:  x == self.x and y > self.y
-        # elif (x2 - self.x) == 0 and y2 < self.y:
-        #     return lambda x, y:  x == self.x and y < self.y
+    def all_atans(self):
+        atts = []
+        atts.extend(self.atans_1)
+        atts.extend(self.atans_2)
+        atts.extend(self.atans_3)
+        atts.extend(self.atans_4)
 
-        # lin = lambda x: ((y2 - self.y) / (x2 - self.x))*x
+        return atts
 
-        # if self.x > x2 and y2 >= self.y:
-        #     is_blocked = lambda x, y: lin(x) == y and x > self.x and y >= self.y  
-        # elif self.x < x2 and y2 >= self.y:
-        #     is_blocked = lambda x, y: lin(x) == y and x < self.x and y >= self.y  
-        # elif self.x > x2 and y2 <=  self.y:
-        #     is_blocked = lambda x, y: lin(x) == y and x > self.x and y <= self.y  
-        # elif self.x < x2 and y2 <= self.y :
-        #     is_blocked = lambda x, y: lin(x) == y and x < self.x and y <= self.y  
-        # # return lambda x, y: lin(x) < y+1 and lin(x) > y-1         
-        return lin
-
-
+    def count(self):
+        return len(self.all_atans())
 
     def __eq__(self, other):
         return self.x == other.x and self.y == other.y
@@ -91,18 +75,20 @@ def solve():
     for y, a_row in enumerate(asteroid_input):
         for x, a in enumerate(a_row):
             if a == '#':
-                ASTEROIDS.append(Asteroid(x, y))
+                ASTEROIDS.append(Asteroid(x+1, y+1))
     
     for a in ASTEROIDS:
         a.set_visible_asteroids()
     
     most_visible_counter = 0
-
+    most_visible = None
     for i, a in enumerate(ASTEROIDS):
-        if len(a.visible_asteroids) > most_visible_counter:
-            most_visible_counter = len(a.visible_asteroids)
+        if a.count() > most_visible_counter:
+            most_visible_counter = a.count()
+            most_visible_i = i
+            most_visible = a
     
-    print(most_visible_counter)
+    print(most_visible_counter, most_visible_i, a.x, a.y)
 
 
 if __name__ == "__main__":
