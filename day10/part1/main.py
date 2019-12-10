@@ -10,23 +10,51 @@ class Asteroid():
         self.y = y
 
         self.visible_asteroids = []
-
+    
     def set_visible_asteroids(self):
         sorted_by_distance = ASTEROIDS.copy()
         sorted_by_distance.sort()
+
         for a in sorted_by_distance:
             if a is self:
                 continue
+            
             if not self.is_blocked(a):
                 self.visible_asteroids.append(a)
-
     
-    def is_blocked(self, asteroid):
+    def is_blocked(self, a):
         for va in self.visible_asteroids:
-            if abs(va.x - asteroid.x) == abs(self.x - va.x):
-                if abs(va.y - asteroid.y) == abs(self.y - va.y):
+            lin = self.create_path_fomula(va.x, va.y)
+            try:
+                if lin(a.x) == a.y:
+                    return True
+            except ZeroDivisionError:
+                if self.x == va.x == a.x:
                     return True
         return False
+
+    def create_path_fomula(self, x2, y2):
+        lin = lambda x: ((y2 - self.y) / (x2 - self.x))*x
+
+        # if (x2 - self.x) == 0 and  y2 > self.y:
+        #     return lambda x, y:  x == self.x and y > self.y
+        # elif (x2 - self.x) == 0 and y2 < self.y:
+        #     return lambda x, y:  x == self.x and y < self.y
+
+        # lin = lambda x: ((y2 - self.y) / (x2 - self.x))*x
+
+        # if self.x > x2 and y2 >= self.y:
+        #     is_blocked = lambda x, y: lin(x) == y and x > self.x and y >= self.y  
+        # elif self.x < x2 and y2 >= self.y:
+        #     is_blocked = lambda x, y: lin(x) == y and x < self.x and y >= self.y  
+        # elif self.x > x2 and y2 <=  self.y:
+        #     is_blocked = lambda x, y: lin(x) == y and x > self.x and y <= self.y  
+        # elif self.x < x2 and y2 <= self.y :
+        #     is_blocked = lambda x, y: lin(x) == y and x < self.x and y <= self.y  
+        # # return lambda x, y: lin(x) < y+1 and lin(x) > y-1         
+        return lin
+
+
 
     def __eq__(self, other):
         return self.x == other.x and self.y == other.y
