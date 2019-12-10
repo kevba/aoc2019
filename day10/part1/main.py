@@ -1,58 +1,41 @@
 import timeit
+import math 
 
 PUZZLE_INPUT_PATH = "../input.txt"
-
+ASTEROIDS = []
 
 class Asteroid():
     def __init__(self, x, y):
         self.x = x
         self.y = y
-        
-        self.blocked_paths = []
-        self.visible_counter = 0
+
+        self.visible_asteroids = []
+
+    def set_visible_asteroids(self):
+        sorted_by_distance = ASTEROIDS.copy()
+        sorted_by_distance.sort()
+        for a in sorted_by_distance:
+            if a is self:
+                continue
+            if not self.is_blocked(a):
+                self.visible_asteroids.append(a)
+
     
-    def set_visible(self, asteroid):    
-        if self == asteroid:
-            return
-    
-        for is_blocked in self.blocked_paths:
-            if is_blocked(asteroid.x, asteroid.y):
-                return
-        
-        self.handle_visible(asteroid)
-    
-    def handle_visible(self,asteroid):
-        self.visible_counter += 1
-
-        f = self.create_path_fomula(asteroid.x, asteroid.y)
-
-        self.blocked_paths.append(f)
-
-    def create_path_fomula(self, x2, y2):
-        if (x2 - self.x) == 0 and  y2 > self.y:
-            return lambda x, y:  x == self.x and y > self.y
-        elif (y2 - self.y) == 0 and  x2 > self.x:
-            return lambda x, y:  y == self.y and x > self.x
-        elif (x2 - self.x) == 0 and y2 < self.y:
-            return lambda x, y:  x == self.x and y < self.y
-        elif (y2 - self.y) == 0 and x2 < self.x:
-            return lambda x, y:  y == self.y and x < self.x
-
-        lin = lambda x: ((y2 - self.y) / (x2 - self.x))*x
-
-        if self.x > x2 and y2 > self.y:
-            is_blocked = lambda x, y: round(lin(x)) == y and x > self.x and y > self.y  
-        elif self.x < x2 and y2 > self.y:
-            is_blocked = lambda x, y: round(lin(x)) == y and x < self.x and y > self.y  
-        elif self.x > x2 and y2 <  self.y:
-            is_blocked = lambda x, y: round(lin(x)) == y and x > self.x and y < self.y  
-        elif self.x < x2 and y2 < self.y :
-            is_blocked = lambda x, y: round(lin(x))) == y and x < self.x and y < self.y  
-        # return lambda x, y: round(lin(x)) < y+1 and round(lin(x)) > y-1         
-        return is_blocked
+    def is_blocked(self, asteroid):
+        for va in self.visible_asteroids:
+            if abs(va.x - asteroid.x) == abs(self.x - va.x):
+                if abs(va.y - asteroid.y) == abs(self.y - va.y):
+                    return True
+        return False
 
     def __eq__(self, other):
         return self.x == other.x and self.y == other.y
+
+    def __lt__(self, coord):
+        abs1 = abs(self.x) + abs(self.y) 
+        abs2 = abs(coord.x) + abs(coord.y) 
+
+        return abs1 < abs2
 
 def read_puzzle_input():
     """ Reads the puzzle input and returns it a list.
@@ -64,25 +47,22 @@ def read_puzzle_input():
 
 def solve():
     asteroid_input = read_puzzle_input()
-    asteroids = []
 
     for y, a_row in enumerate(asteroid_input):
         for x, a in enumerate(a_row):
             if a == '#':
-                asteroids.append(Asteroid(x, y))
+                ASTEROIDS.append(Asteroid(x, y))
     
-    for a in asteroids:
-        for b in asteroids:
-            a.set_visible(b)
+    for a in ASTEROIDS:
+        a.set_visible_asteroids()
     
     most_visible_counter = 0
-    most_visible_index = 0
-    for i, a in enumerate(asteroids):
-        if a.visible_counter > most_visible_counter:
-            most_visible_counter = a.visible_counter
-            most_visible_index = i
+
+    for i, a in enumerate(ASTEROIDS):
+        if len(a.visible_asteroids) > most_visible_counter:
+            most_visible_counter = len(a.visible_asteroids)
     
-    print(asteroids[most_visible_index].visible_counter, asteroids[most_visible_index].x+1, asteroids[most_visible_index].y+1 )
+    print(most_visible_counter)
 
 
 if __name__ == "__main__":
