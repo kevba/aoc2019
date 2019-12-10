@@ -25,6 +25,18 @@ class Asteroid():
     def is_blocked(self, a):
         for va in self.visible_asteroids:
             lin = self.create_path_fomula(va.x, va.y)
+
+            if (self.x > va.x > a.x) and (self.y < va.y < a.y):
+                pass
+            elif (self.x < va.x < a.x) and (self.y < va.y < a.y):
+                pass
+            elif (self.x < va.x < a.x) and (self.y > va.y > a.y):
+                pass
+            elif (self.x > va.x > a.x) and (self.y > va.y > a.y):
+                pass
+            else:
+                continue
+            
             try:
                 if lin(a.x) == a.y:
                     return True
