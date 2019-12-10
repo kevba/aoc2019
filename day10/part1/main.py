@@ -41,14 +41,14 @@ class Asteroid():
         lin = lambda x: ((y2 - self.y) / (x2 - self.x))*x
 
         if self.x > x2 and y2 > self.y:
-            is_blocked = lambda x, y: lin(x) == y and x > self.x and y > self.y  
+            is_blocked = lambda x, y: round(lin(x)) == y and x > self.x and y > self.y  
         elif self.x < x2 and y2 > self.y:
-            is_blocked = lambda x, y: lin(x) == y and x < self.x and y > self.y  
+            is_blocked = lambda x, y: round(lin(x)) == y and x < self.x and y > self.y  
         elif self.x > x2 and y2 <  self.y:
-            is_blocked = lambda x, y: lin(x) == y and x > self.x and y < self.y  
+            is_blocked = lambda x, y: round(lin(x)) == y and x > self.x and y < self.y  
         elif self.x < x2 and y2 < self.y :
-            is_blocked = lambda x, y: lin(x) == y and x < self.x and y < self.y  
-        # return lambda x, y: lin(x) < y+1 and lin(x) > y-1         
+            is_blocked = lambda x, y: round(lin(x))) == y and x < self.x and y < self.y  
+        # return lambda x, y: round(lin(x)) < y+1 and round(lin(x)) > y-1         
         return is_blocked
 
     def __eq__(self, other):
