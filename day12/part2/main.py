@@ -6,6 +6,7 @@ import re
 
 MOON_NAMES = ["Io", "Europa", "Ganymede", "Callisto"]
 STEPS = 1000
+current_step = 0
 
 class Point():
     def __init__(self, x, y, z):
@@ -55,7 +56,7 @@ class Moon():
         self.name = name
 
         self.velocity = Velocity()
-
+    
     def update_velocity(self, velocity):
         self.velocity + velocity
 
@@ -107,7 +108,7 @@ def calculate_gravity(moons):
         moons[0].update_velocity(v.invert())
         moons[1].update_velocity(v)
 
-def update(moons):
+def update(moons, current_step):
     for m in moons:
         m.apply_velocities()
 
@@ -142,16 +143,13 @@ def solve():
         moons.append(Moon(pos, MOON_NAMES[i]))
         og_moons.append(Moon(pos, MOON_NAMES[i]))
 
-    step_counter = 0
+    current_step = 0
     while True:
-        step_counter += 1
+        current_step += 1
         calculate_gravity(moons)
-        update(moons)
+        update(moons, current_step)
 
-        if moons_are_equal(moons, og_moons):
-            break
-
-    print(step_counter)
+    print(current_step)
 
 if __name__ == "__main__":
     execution_time = timeit.timeit(solve, number=1)
